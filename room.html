@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
+        <link href="./room-style.css" rel="stylesheet" />
+        <title>Document</title>
+
+        <!-- Bootstrap -->
+        <!-- Font Awesome -->
+        <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+        rel="stylesheet"
+        />
+        <!-- Google Fonts -->
+        <link
+        href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+        rel="stylesheet"
+        />
+        <!-- MDB -->
+        <link
+        href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.0.0/mdb.min.css"
+        rel="stylesheet"
+        />
+
+        <!-- MDB -->
+        <script
+        type="text/javascript"
+        defer src="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/3.0.0/mdb.min.js"
+        ></script>
+    </head>
+
+<body>
+        <div id="header">
+
+            <!-- navbar icon -->
+            <nav class="navbar navbar-light bg-dark">
+                <div class="container">
+                  <a class="navbar-brand" href="#">
+                    <img
+                      src="images/logo-bez-tla.png"
+                      height="120"
+                      alt=""
+                      loading="lazy"
+                    />
+                  </a>
+
+                  <!-- search form -->
+                  <form id="yt-link" class="d-flex input-group w-50 ">
+                    <input type="search" class="form-control" placeholder="Wklej link do filmu na youtubie" aria-label="Search"/>
+                    <button class="btn btn-outline-light" type="button" data-mdb-ripple-color="light">
+                      Oglądaj!
+                    </button>
+                  </form>
+                </div>
+              </nav>
+        </div>
+
+
+        <!-- YT PLAYER -->
+
+    <div class="row light-dark d-flex justify-content-center">
+        <div id="yt-player" class="col-md-8 d-flex justify-content-center">
+             <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+    <div id="player"></div>
+
+    <script>
+      // 2. This code loads the IFrame Player API code asynchronously.
+      var tag = document.createElement('script');
+
+      tag.src = "https://www.youtube.com/iframe_api";
+      var firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+      // 3. This function creates an <iframe> (and YouTube player)
+      //    after the API code downloads.
+      var player;
+      function onYouTubeIframeAPIReady() {
+        player = new YT.Player('player', {
+          height: '500',
+          width: '900',
+          videoId: 'M7lc1UVf-VE',
+          events: {
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
+          }
+        });
+      }
+
+      // 4. The API will call this function when the video player is ready.
+      function onPlayerReady(event) {
+        event.target.playVideo();
+      }
+
+      // 5. The API calls this function when the player's state changes.
+      //    The function indicates that when playing a video (state=1),
+      //    the player should play for six seconds and then stop.
+      var done = false;
+      function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.PLAYING && !done) {
+          setTimeout(stopVideo, 6000);
+          done = true;
+        }
+      }
+      function stopVideo() {
+        player.stopVideo();
+      }
+    </script>
+        </div>
+
+
+
+        <!-- CHAT -->
+        <div id="chat" class="col-md-4 d-flex justify-content-center">
+            dsadsa
+        </div>
+    </div>
+
+
+
+    <div id="footer" class="fixed-bottom">
+      
+      <footer class="bg-grey text-center text-lg-start">
+          <!-- Copyright -->
+          <div class="text-center p-3" style="background-color: rgba(0, 0, 0, 0.4)">
+            
+            <a class="text-light" href="https://mdbootstrap.com/">Stworzone przez Kacpra Maja na zajecia Pracowni Programowania</a>
+            <br/>
+            <a class="text-light" href="https://mdbootstrap.com/">Numer indeksu: 457990</a>
+          </div>
+          <!-- Copyright -->
+  </div>
+</body>
+</html>
