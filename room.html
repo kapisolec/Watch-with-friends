@@ -3,6 +3,7 @@
     <head>
         <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet" />
         <link href="./room-style.css" rel="stylesheet" />
+        <script type="text/javascript" defer src="room.js"></script>
         <title>Document</title>
 
         <!-- Bootstrap -->
@@ -45,9 +46,9 @@
                   </a>
 
                   <!-- search form -->
-                  <form id="yt-link" class="d-flex input-group w-50 ">
-                    <input type="search" class="form-control" placeholder="Wklej link do filmu na youtubie" aria-label="Search"/>
-                    <button class="btn btn-outline-light" type="button" data-mdb-ripple-color="light">
+                  <form class="d-flex input-group w-50 ">
+                    <input type="search" class="form-control"  id="yt-link" placeholder="Wklej link do filmu na youtubie" aria-label="Search"/>
+                    <button class="btn btn-outline-light" id="link-do-filmu-btn" type="button" data-mdb-ripple-color="light">
                       Oglądaj!
                     </button>
                   </form>
@@ -59,60 +60,20 @@
         <!-- YT PLAYER -->
 
     <div class="row light-dark d-flex justify-content-center">
-        <div id="yt-player" class="col-md-8 d-flex justify-content-center">
-             <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
-    <div id="player"></div>
-
-    <script>
-      // 2. This code loads the IFrame Player API code asynchronously.
-      var tag = document.createElement('script');
-
-      tag.src = "https://www.youtube.com/iframe_api";
-      var firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
-      // 3. This function creates an <iframe> (and YouTube player)
-      //    after the API code downloads.
-      var player;
-      function onYouTubeIframeAPIReady() {
-        player = new YT.Player('player', {
-          height: '500',
-          width: '900',
-          videoId: 'M7lc1UVf-VE',
-          events: {
-            'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
-          }
-        });
-      }
-
-      // 4. The API will call this function when the video player is ready.
-      function onPlayerReady(event) {
-        event.target.playVideo();
-      }
-
-      // 5. The API calls this function when the player's state changes.
-      //    The function indicates that when playing a video (state=1),
-      //    the player should play for six seconds and then stop.
-      var done = false;
-      function onPlayerStateChange(event) {
-        if (event.data == YT.PlayerState.PLAYING && !done) {
-          setTimeout(stopVideo, 6000);
-          done = true;
-        }
-      }
-      function stopVideo() {
-        player.stopVideo();
-      }
-    </script>
+        <div class="col-md-8 d-flex justify-content-center">
+          <div id="player">
+          <iframe id="yt-player-iframe" width="900" height="500" src="https://www.youtube.com/embed/9YffrCViTVk" frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+          allowfullscreen></iframe>
         </div>
-
+      </div>
+          
 
 
         <!-- CHAT -->
-        <div id="chat" class="col-md-4 d-flex justify-content-center">
-            dsadsa
-        </div>
+      <div id="chat" class="col-md-4 d-flex justify-content-center">
+          dsadsa
+      </div>
     </div>
 
 
