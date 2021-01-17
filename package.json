@@ -1,0 +1,26 @@
+{
+  "name": "watch-with-friends",
+  "version": "1.0.0",
+  "description": "**Watch with friends** to projekt, który ma za zadanie umożliwić „spotkanie” się znajomych na wspólnym oglądaniu filmów w dobie pandemii. Postawiłem sobie za zadanie umożliwić połączenie możliwie wielu przyjaciół jednocześnie w jednym, generowanym losowo pokoju do którego dostęp otrzymują osoby, które dostaną unikatowy link. W pokoju tym użytkownicy poproszeni zostaną o ustawienie swojej nazwy a następnie mogą zarządzać puszczanym aktualnie filmem z YouTube, wkleić link do wybranego przez siebie filmu, dowolnie zatrzymywać i puszczać film. Jako dodatkowy element pokoju dodany zostanie chat, który będzie pozwalał na komunikację pomiędzy użytkownikami serwisu w czasie rzeczywistym.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js --ignore src/utils/roomsIDs.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://git.wmi.amu.edu.pl/s457990/Watch-with-friends"
+  },
+  "author": "Kacper Maj",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "fs": "0.0.1-security",
+    "hbs": "^4.1.1",
+    "mdbootstrap": "^4.19.2",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.7"
+  }
+}
