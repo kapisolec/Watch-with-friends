@@ -17,17 +17,25 @@
   <div class="centered-form">
     <div class="centered-form__box">
       <h1>Join</h1>
-      <form action="/chat.html">
+      <form action="/chat">
         <label>Display name</label>
         <input type="text" name="username" placeholder="Display name" required>
         <label>Room</label>
-        <input type="text" name="room" placeholder="Room" required>
-        <button type="submit">Join</button>
+        <input type="text" id="roomID" name="room" placeholder="Room" required>
+        <button type="submit">Join or create</button>
       </form>
       <p class="myPar">or</p>
-      <button type="submit">Generate room</button>
+      <button type="submit" id="generateIdButton">Generate unique id</button>
     </div>
 
   </div>
+  <script>
+    const generateIdButton = document.querySelector('#generateIdButton');
+    const room = document.querySelector('#roomID');
+    generateIdButton.addEventListener('click', e => {
+      const id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      room.value = id;
+    });
+  </script>
 </body>
 </html>

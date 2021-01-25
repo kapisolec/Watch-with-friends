@@ -7,6 +7,8 @@ const input = form.childNodes[1];
 const button = form.childNodes[3];
 const messageContainer = document.querySelector('#messages-container');
 const sidebarContainer = document.querySelector('.chat__sidebar');
+const changeVideoButton = document.querySelector('#changeVideo');
+const syncVideosButton = document.querySelector('#syncVideos');
 
 // TEMPLATES
 const sidebarTemplate = `<h2 class="room-title">{{room}}</h2>
@@ -38,7 +40,83 @@ const htmlTemplate = [
 ];
 
 let message = '';
-// let user = window.prompt('Please state your username', 'User');
+let videoId = '';
+
+// YT PLAYER LOGIC
+
+// Load the IFrame Player API code asynchronously.
+var tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/player_api';
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+// Replace the 'ytplayer' element with an <iframe> and
+// YouTube player after the API code downloads.
+var player;
+function onYouTubePlayerAPIReady() {
+    player = new YT.Player('ytplayer', {
+        height: '420',
+        width: '860',
+        videoId: 'xFqeAUKU09o',
+    });
+
+    // STATE OF PLAYER
+    player.addEventListener('onStateChange', (e) => {
+        // 3 bufforing, 1 playing, 2 paused, -1 stopped entirely
+        if (e.data !== 3) {
+            const time = e.target.getCurrentTime();
+            socket.emit('onPlayerState', e.data, time);
+        }
+    });
+}
+
+// ON PLAYER STATE DATA RECV
+socket.on('onPlayerState', (data, time) => {
+    if (data === 1 || data === -1) {
+        // player.seekTo(time, true);
+        player.playVideo();
+    } else if (data === 2) {
+        if (Math.abs(player.getCurrentTime() - time) > 2) {
+            player.seekTo(time, true);
+            player.playVideo();
+        } else {
+            player.pauseVideo();
+        }
+    } else if (data === 0) player.stopVideo();
+});
+
+const videoIdParse = (link) => {
+    return link.slice(link.indexOf('v=') + 2);
+};
+
+// SYNC VIDEOS
+syncVideosButton.addEventListener('click', () => {
+    // console.log('syncing');
+    const time = player.getCurrentTime();
+    const id = videoIdParse(player.getVideoUrl());
+    // console.log(time);
+    socket.emit('videoSync', time, id);
+});
+
+socket.on('videoSync', (time, id) => {
+    // console.log(time, id);
+    player.loadVideoById(id, time);
+    // player.seekTo(time);
+});
+
+// Change video
+changeVideoButton.addEventListener('click', () => {
+    let link = input.value;
+    if (!link) return alert('You should pass the youtube link');
+    const videoId = videoIdParse(link);
+    socket.emit('changeVideo', videoId);
+    player.loadVideoById(`${videoId}`, 5, 'large');
+    input.value = '';
+});
+
+socket.on('changeVideo', (videoId) => {
+    player.loadVideoById(`${videoId}`, 5, 'large');
+});
 
 const autoscroll = () => {
     // New message elemnt
@@ -59,7 +137,6 @@ const autoscroll = () => {
     const scrolloffset = messageContainer.scrollTop + visibleHeight + 15;
 
     if (containerHeight - newMessageHeight <= scrolloffset) {
-        console.log('should scroll down');
         messageContainer.scrollTop = messageContainer.scrollHeight;
     }
 };
@@ -67,10 +144,9 @@ const autoscroll = () => {
 const { username, room } = Qs.parse(location.search, {
     ignoreQueryPrefix: true,
 });
-console.log(username, room);
 
 socket.on('message', (object) => {
-    console.log(object);
+    // console.log(object);
     const string = object.text;
     const user = object.username;
     const createdAt = moment(object.createdAt).format('HH:mm:ss');
@@ -84,7 +160,7 @@ socket.on('message', (object) => {
         messageContainer.insertAdjacentHTML('beforeend', html);
         autoscroll();
 
-        console.log('not includes');
+        // console.log('not includes');
     } else if (string.includes('Welcome to the server')) {
         const html = Mustache.render(htmlTemplate[2], {
             string,
@@ -115,7 +191,7 @@ form.addEventListener('submit', (e) => {
         // Re-enable form
         button.removeAttribute('disabled');
         if (error) return console.log(error);
-        console.log('Message delivered');
+        // console.log('Message delivered');
         input.value = '';
         input.focus();
     });
@@ -133,7 +209,7 @@ buttonLocation.addEventListener('click', (e) => {
         const coordsObj = `https://www.google.com/maps/?q=${latitude},${longitude}`;
 
         socket.emit('message', coordsObj, () => {
-            console.log('Location delivered');
+            // console.log('Location delivered');
             buttonLocation.removeAttribute('disabled');
         });
     });
@@ -142,6 +218,10 @@ buttonLocation.addEventListener('click', (e) => {
 socket.on('roomData', ({ room, users }) => {
     const html = Mustache.render(sidebarTemplate, { room, users });
     sidebarContainer.innerHTML = html;
+});
+
+socket.on('videoData', (videoData) => {
+    player.loadVideoById(`${videoData}`, 5, 'large');
 });
 
 socket.emit('join', { username, room }, (error) => {

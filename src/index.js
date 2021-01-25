@@ -12,13 +12,18 @@ const {
 } = require('./utils/users');
 
 const app = express();
+app.set('view engine', 'hbs');
+app.engine('html', require('hbs').__express);
 const server = http.createServer(app);
 const io = socketio(server);
 
 const port = process.env.PORT || 3000;
 const publicDirectoryPath = path.join(__dirname, '../public');
-
 app.use(express.static(publicDirectoryPath));
+
+app.get('/chat', (req, res) => {
+    res.render('chat.html', {});
+});
 
 io.on('connection', (socket) => {
     // Welcome message
@@ -34,6 +39,7 @@ io.on('connection', (socket) => {
             'message',
             generateMessage(`Welcome to the server, ${username}!`)
         );
+
         socket.broadcast
             .to(user.room)
             .emit('message', generateMessage(`${user.username} has joined`));
@@ -44,14 +50,24 @@ io.on('connection', (socket) => {
         callback();
     });
 
-    // On recv message
+    socket.on('videoSync', (time, id) => {
+        const user = getUser(socket.id);
+        // console.log(time);
+        io.to(user.room).emit('videoSync', time, id);
+    });
+
+    socket.on('changeVideo', (videoId) => {
+        const user = getUser(socket.id);
+        if (!user) return;
+        io.to(user.room).emit('changeVideo', videoId);
+    });
+
     socket.on('message', (message, callback) => {
         const user = getUser(socket.id);
         const filter = new Filter();
 
         if (filter.isProfane(message)) message = filter.clean(message);
         //callback('Profanity is not allowed');
-        console.log(user);
         try {
             io.to(user.room).emit(
                 'message',
@@ -64,17 +80,26 @@ io.on('connection', (socket) => {
         callback();
     });
 
+    // Changing state of yt player after recv -> send data.e
+    socket.on('onPlayerState', (data, time) => {
+        const user = getUser(socket.id);
+        if (user) {
+            io.to(user.room).emit('onPlayerState', data, time);
+        }
+    });
+
     socket.on('disconnect', () => {
         const user = removeUser(socket.id);
-        if (user)
+        if (user) {
             io.to(user.room).emit(
                 'message',
                 generateMessage(`${user.username} has left!`)
             );
-        io.to(user.room).emit('roomData', {
-            room: user.room,
-            users: getUsersInRoom(user.room),
-        });
+            io.to(user.room).emit('roomData', {
+                room: user.room,
+                users: getUsersInRoom(user.room),
+            });
+        }
     });
 
     socket.on('sendLocation', (object, callback) => {
