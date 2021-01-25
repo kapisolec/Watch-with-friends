@@ -39,7 +39,6 @@ io.on('connection', (socket) => {
             'message',
             generateMessage(`Welcome to the server, ${username}!`)
         );
-
         socket.broadcast
             .to(user.room)
             .emit('message', generateMessage(`${user.username} has joined`));
