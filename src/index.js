@@ -1,55 +1,86 @@
-const path = require('path');
 const express = require('express');
-const hbs = require('hbs');
-const request = require('request');
-const bodyParser = require('body-parser');
-const { addToJson, checkIfInJson } = require('./logic');
-require('./logic');
+const http = require('http');
+const path = require('path');
+const socketio = require('socket.io');
+const Filter = require('bad-words');
+const { generateMessage } = require('./utils/messages');
+const {
+    addUser,
+    removeUser,
+    getUser,
+    getUsersInRoom,
+} = require('./utils/users');
 
-// Establishing the server
 const app = express();
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(bodyParser.raw());
+const server = http.createServer(app);
+const io = socketio(server);
+
 const port = process.env.PORT || 3000;
+const publicDirectoryPath = path.join(__dirname, '../public');
 
-// Establishing routes to views directory
-const viewsPath = path.join(__dirname, '../templates/views');
+app.use(express.static(publicDirectoryPath));
 
-// setup handlebars, engine, views locations
-app.set('view engine', 'hbs');
-app.set('views', viewsPath);
+io.on('connection', (socket) => {
+    // Welcome message
 
-// setup static dir to serve
-app.use(express.static(path.join(__dirname, `../public`)));
+    socket.on('join', ({ username, room }, callback) => {
+        const { error, user } = addUser({ id: socket.id, username, room });
+        if (error) return callback(error);
 
-//Establishing the routers for app.get
-app.get('', (req, res) => {
-    res.render('index', {});
-});
+        socket.join(user.room); //Join the room
 
-app.post('/room', (req, res) => {
-    // console.log(req.body.id);
-    addToJson(req.body.id);
-    // res.redirect('/room/:id');
-});
-app.get('/room/:id', (req, res) => {
-    // sprawdzam czy id znajduje sie w jsonie aktualnie stworzonych pokojow, jesli tak to pozwalam sie podlaczyc
-    // jak uzytkownik wychodzi to sprawdzam w socketIO ile ludzi podlaczonych jest aktualnie do pokoju
-    // console.log(req.params.id);
-    // console.log(checkIfInJson(req.params.id));
-    if (!checkIfInJson(req.params.id)) return res.send('no found');
+        // emit the message to() specific room
+        socket.emit(
+            'message',
+            generateMessage(`Welcome to the server, ${username}!`)
+        );
+        socket.broadcast
+            .to(user.room)
+            .emit('message', generateMessage(`${user.username} has joined`));
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room),
+        });
+        callback();
+    });
 
-    res.render('room', {});
-});
-app.get('*', (req, res) => {
-    res.send('404', {
-        title: 'page not found',
-        pageName: '404 error',
+    // On recv message
+    socket.on('message', (message, callback) => {
+        const user = getUser(socket.id);
+        const filter = new Filter();
+
+        if (filter.isProfane(message)) message = filter.clean(message);
+        //callback('Profanity is not allowed');
+        console.log(user);
+        try {
+            io.to(user.room).emit(
+                'message',
+                generateMessage(message, user.username)
+            );
+        } catch (error) {
+            console.log(error);
+        }
+
+        callback();
+    });
+
+    socket.on('disconnect', () => {
+        const user = removeUser(socket.id);
+        if (user)
+            io.to(user.room).emit(
+                'message',
+                generateMessage(`${user.username} has left!`)
+            );
+        io.to(user.room).emit('roomData', {
+            room: user.room,
+            users: getUsersInRoom(user.room),
+        });
+    });
+
+    socket.on('sendLocation', (object, callback) => {
+        callback('Location shared');
+        socket.broadcast.emit('recvObject', generateMessage(object));
     });
 });
 
-// Deploying server
-app.listen(port, () => {
-    console.log(`server is up on port ${port}`);
-});
+server.listen(port, () => console.log(`Server is listening at ${port}`));
