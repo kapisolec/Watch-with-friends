@@ -110,12 +110,12 @@ changeVideoButton.addEventListener('click', () => {
     if (!link) return alert('You should pass the youtube link');
     const videoId = videoIdParse(link);
     socket.emit('changeVideo', videoId);
-    player.loadVideoById(`${videoId}`, 5, 'large');
+    player.loadVideoById(`${videoId}`, 'large');
     input.value = '';
 });
 
 socket.on('changeVideo', (videoId) => {
-    player.loadVideoById(`${videoId}`, 5, 'large');
+    player.loadVideoById(`${videoId}`, 'large');
 });
 
 const autoscroll = () => {
@@ -221,7 +221,7 @@ socket.on('roomData', ({ room, users }) => {
 });
 
 socket.on('videoData', (videoData) => {
-    player.loadVideoById(`${videoData}`, 5, 'large');
+    player.loadVideoById(`${videoData}`, 'large');
 });
 
 socket.emit('join', { username, room }, (error) => {
