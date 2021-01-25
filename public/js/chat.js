@@ -86,15 +86,32 @@ socket.on('onPlayerState', (data, time) => {
 });
 
 const videoIdParse = (link) => {
-    return link.slice(link.indexOf('v=') + 2);
+    if (link.includes('&ab_channel')) {
+        const substr = link.substring(
+            link.indexOf('v=') + 2,
+            link.indexOf('&')
+        );
+        return substr;
+    } else {
+        return link.slice(link.indexOf('v=') + 2);
+    }
 };
 
 // SYNC VIDEOS
 syncVideosButton.addEventListener('click', () => {
-    // console.log('syncing');
+    console.log(player.getVideoUrl());
+
+    // If video is the same as starting video
+    if (
+        videoIdParse(player.getVideoUrl()) ===
+        videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
+    )
+        return alert(
+            'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
+        );
+
     const time = player.getCurrentTime();
     const id = videoIdParse(player.getVideoUrl());
-    // console.log(time);
     socket.emit('videoSync', time, id);
 });
 
@@ -134,7 +151,7 @@ const autoscroll = () => {
     const containerHeight = messageContainer.scrollHeight;
 
     // scrolloffset
-    const scrolloffset = messageContainer.scrollTop + visibleHeight + 15;
+    const scrolloffset = messageContainer.scrollTop + visibleHeight + 120;
 
     if (containerHeight - newMessageHeight <= scrolloffset) {
         messageContainer.scrollTop = messageContainer.scrollHeight;
