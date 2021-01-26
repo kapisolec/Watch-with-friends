@@ -9,40 +9,11 @@ const messageContainer = document.querySelector('#messages-container');
 const sidebarContainer = document.querySelector('.chat__sidebar');
 const changeVideoButton = document.querySelector('#changeVideo');
 const syncVideosButton = document.querySelector('#syncVideos');
+const chatBox = document.querySelector('.chat');
+const modal = document.getElementById('myModal');
+const span = document.getElementsByClassName('close')[0];
 
-// TEMPLATES
-const sidebarTemplate = `<h2 class="room-title">{{room}}</h2>
-<h3 class="list-title">Users</h3>
-<ul class="users">
-  {{#users}}
-    <li>{{username}}</li>
-  {{/users}}
-</ul>`;
-
-const htmlTemplate = [
-    `<div class="message">
-    <p> 
-        <span class="message__name"> {{user}} </span>
-        <span class="message__meta"> {{createdAt}} </span>
-    </p>
-    <p>{{string}}</p>
-</div>`,
-    `<div class="message">
-    <p> 
-        <span class="message__name"> {{user}} </span>
-        <span class="message__meta"> {{createdAt}} </span>
-    </p>
-    <p><a href="{{string}}">Link</a></p>
-</div>`,
-    `<div class="message">
-<p class="welcome-mess">{{string}}</p>
-</div>`,
-];
-
-let message = '';
-let videoId = '';
-
-// YT PLAYER LOGIC
+// ###### YOUTUBE PLAYER ###### //
 
 // Load the IFrame Player API code asynchronously.
 var tag = document.createElement('script');
@@ -70,50 +41,13 @@ function onYouTubePlayerAPIReady() {
     });
 }
 
-// ON PLAYER STATE DATA RECV
-socket.on('onPlayerState', (data, time) => {
-    if (data === 1 || data === -1) {
-        // player.seekTo(time, true);
-        player.playVideo();
-    } else if (data === 2) {
-        if (Math.abs(player.getCurrentTime() - time) > 2) {
-            player.seekTo(time, true);
-            player.playVideo();
-        } else {
-            player.pauseVideo();
-        }
-    } else if (data === 0) player.stopVideo();
+// Parsing room query
+
+const { username, room } = Qs.parse(location.search, {
+    ignoreQueryPrefix: true,
 });
 
-const videoIdParse = (link) => {
-    if (link.includes('&ab_channel')) {
-        const substr = link.substring(
-            link.indexOf('v=') + 2,
-            link.indexOf('&')
-        );
-        return substr;
-    } else {
-        return link.slice(link.indexOf('v=') + 2);
-    }
-};
-
-// SYNC VIDEOS
-syncVideosButton.addEventListener('click', () => {
-    console.log(player.getVideoUrl());
-
-    // If video is the same as starting video
-    if (
-        videoIdParse(player.getVideoUrl()) ===
-        videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
-    )
-        return alert(
-            'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
-        );
-
-    const time = player.getCurrentTime();
-    const id = videoIdParse(player.getVideoUrl());
-    socket.emit('videoSync', time, id);
-});
+// ###### SOCKETS LOGIC ###### //
 
 socket.on('videoSync', (time, id) => {
     // console.log(time, id);
@@ -121,45 +55,8 @@ socket.on('videoSync', (time, id) => {
     // player.seekTo(time);
 });
 
-// Change video
-changeVideoButton.addEventListener('click', () => {
-    let link = input.value;
-    if (!link) return alert('You should pass the youtube link');
-    const videoId = videoIdParse(link);
-    socket.emit('changeVideo', videoId);
-    player.loadVideoById(`${videoId}`, 'large');
-    input.value = '';
-});
-
 socket.on('changeVideo', (videoId) => {
     player.loadVideoById(`${videoId}`, 'large');
-});
-
-const autoscroll = () => {
-    // New message elemnt
-    const newMessage = messageContainer.lastElementChild;
-
-    // Height of the new message
-    const newMessageStyles = getComputedStyle(newMessage);
-    const newMessageMargin = parseInt(newMessageStyles.marginBottom);
-    const newMessageHeight = newMessage.offsetHeight + newMessageMargin;
-
-    // Visible height
-    const visibleHeight = messageContainer.offsetHeight;
-
-    // Height of messages container
-    const containerHeight = messageContainer.scrollHeight;
-
-    // scrolloffset
-    const scrolloffset = messageContainer.scrollTop + visibleHeight + 120;
-
-    if (containerHeight - newMessageHeight <= scrolloffset) {
-        messageContainer.scrollTop = messageContainer.scrollHeight;
-    }
-};
-
-const { username, room } = Qs.parse(location.search, {
-    ignoreQueryPrefix: true,
 });
 
 socket.on('message', (object) => {
@@ -195,12 +92,72 @@ socket.on('message', (object) => {
     }
 });
 
+socket.on('roomData', ({ room, users }) => {
+    const html = Mustache.render(sidebarTemplate, { room, users });
+    sidebarContainer.innerHTML = html;
+});
+
+socket.on('videoData', (videoData) => {
+    player.loadVideoById(`${videoData}`, 'large');
+});
+
+// ON PLAYER STATE DATA RECV
+socket.on('onPlayerState', (data, time) => {
+    if (data === 1 || data === -1) {
+        // player.seekTo(time, true);
+        player.playVideo();
+    } else if (data === 2) {
+        if (Math.abs(player.getCurrentTime() - time) > 2) {
+            player.seekTo(time, true);
+            player.playVideo();
+        } else {
+            player.pauseVideo();
+        }
+    } else if (data === 0) player.stopVideo();
+});
+
+socket.emit('join', { username, room }, (error) => {
+    if (error) {
+        alert(error);
+        location.href = '/';
+    }
+});
+// ####### EVENT LISTENERS ####### //
+
+// SYNC VIDEOS
+syncVideosButton.addEventListener('click', () => {
+    console.log(player.getVideoUrl());
+
+    // If video is the same as starting video
+    if (
+        videoIdParse(player.getVideoUrl()) ===
+        videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
+    )
+        return alert(
+            'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
+        );
+
+    const time = player.getCurrentTime();
+    const id = videoIdParse(player.getVideoUrl());
+    socket.emit('videoSync', time, id);
+});
+
+// Change video
+changeVideoButton.addEventListener('click', () => {
+    let link = input.value;
+    if (!link) return alert('You should pass the youtube link');
+    const videoId = videoIdParse(link);
+    socket.emit('changeVideo', videoId);
+    player.loadVideoById(`${videoId}`, 'large');
+    input.value = '';
+});
+
+// Form submission
 form.addEventListener('submit', (e) => {
     e.preventDefault();
     input.focus();
 
     // Disable form
-
     if (input.value === '') return;
     button.setAttribute('disabled', 'disabled');
 
@@ -208,7 +165,6 @@ form.addEventListener('submit', (e) => {
         // Re-enable form
         button.removeAttribute('disabled');
         if (error) return console.log(error);
-        // console.log('Message delivered');
         input.value = '';
         input.focus();
     });
@@ -232,18 +188,81 @@ buttonLocation.addEventListener('click', (e) => {
     });
 });
 
-socket.on('roomData', ({ room, users }) => {
-    const html = Mustache.render(sidebarTemplate, { room, users });
-    sidebarContainer.innerHTML = html;
-});
+// ###### UTILITIES ######//
 
-socket.on('videoData', (videoData) => {
-    player.loadVideoById(`${videoData}`, 'large');
-});
+// Auto scroll function
+const autoscroll = () => {
+    // New message elemnt
+    const newMessage = messageContainer.lastElementChild;
 
-socket.emit('join', { username, room }, (error) => {
-    if (error) {
-        alert(error);
-        location.href = '/';
+    // Height of the new message
+    const newMessageStyles = getComputedStyle(newMessage);
+    const newMessageMargin = parseInt(newMessageStyles.marginBottom);
+    const newMessageHeight = newMessage.offsetHeight + newMessageMargin;
+
+    // Visible height
+    const visibleHeight = messageContainer.offsetHeight;
+
+    // Height of messages container
+    const containerHeight = messageContainer.scrollHeight;
+
+    // scrolloffset
+    const scrolloffset = messageContainer.scrollTop + visibleHeight + 120;
+
+    if (containerHeight - newMessageHeight <= scrolloffset) {
+        messageContainer.scrollTop = messageContainer.scrollHeight;
     }
-});
+};
+
+// Parsing yt video
+const videoIdParse = (link) => {
+    if (link.includes('&ab_channel')) {
+        const substr = link.substring(
+            link.indexOf('v=') + 2,
+            link.indexOf('&')
+        );
+        return substr;
+    } else {
+        return link.slice(link.indexOf('v=') + 2);
+    }
+};
+
+span.onclick = function () {
+    modal.style.display = 'none';
+    chatBox.style.visibility = 'visible';
+};
+window.onclick = function (event) {
+    if (event.target == modal) {
+        modal.style.display = 'none';
+        chatBox.style.visibility = 'visible';
+    }
+};
+
+// TEMPLATES
+const sidebarTemplate = `<h2 class="room-title">{{room}}</h2>
+<h3 class="list-title">Users</h3>
+<ul class="users">
+  {{#users}}
+    <li>{{username}}</li>
+  {{/users}}
+</ul>`;
+
+const htmlTemplate = [
+    `<div class="message">
+    <p> 
+        <span class="message__name"> {{user}} </span>
+        <span class="message__meta"> {{createdAt}} </span>
+    </p>
+    <p>{{string}}</p>
+</div>`,
+    `<div class="message">
+    <p> 
+        <span class="message__name"> {{user}} </span>
+        <span class="message__meta"> {{createdAt}} </span>
+    </p>
+    <p><a href="{{string}}">Link</a></p>
+</div>`,
+    `<div class="message">
+<p class="welcome-mess">{{string}}</p>
+</div>`,
+];

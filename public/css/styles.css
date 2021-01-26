@@ -87,6 +87,7 @@ button:disabled {
 
 .chat {
     display: flex;
+    visibility: hidden;
 }
 
 .chat__sidebar {
@@ -110,7 +111,7 @@ button:disabled {
     top: 1vh;
     width: 49%;
     height: 49%;
-    z-index: 1;
+    z-index: 2;
     /* margin-top: 5px; */
     /* margin-left: 5px; */
 }
@@ -213,4 +214,47 @@ button:disabled {
     font-size: 16px;
     margin-right: 8px;
     color: #333333;
+}
+
+/* The Modal (background) */
+.modal {
+    display: block; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(72, 65, 138); /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.616); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #333744;
+    margin: 10% auto; /* 15% from the top and centered */
+    border-radius: 7px;
+    padding: 25px;
+    color: #d1d1d1;
+    font-size: 18px;
+    font-weight: 100;
+    width: 60%; /* Could be more or less, depending on screen size */
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    text-align: justify;
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }
