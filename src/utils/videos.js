@@ -1,6 +1,7 @@
 const videos = [];
 
 const addVideo = ({ room, videoID }) => {
+    if (videoID === 'ttps://www.youtube.com/watch') return;
     const videoIsTheSame = videos.find((obj) => obj.videoID === videoID);
     if (videoIsTheSame) return;
     const index = videos.findIndex((object) => object.room === room);
