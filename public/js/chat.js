@@ -28,7 +28,7 @@ function onYouTubePlayerAPIReady() {
     player = new YT.Player('ytplayer', {
         height: '420',
         width: '860',
-        videoId: 'M7lc1UVf-VE',
+        videoId: '',
     });
 
     // STATE OF PLAYER
@@ -60,6 +60,27 @@ socket.on('videoSync', (time, id) => {
 
 socket.on('changeVideo', (videoId) => {
     player.loadVideoById(`${videoId}`, 'large');
+});
+
+socket.on('welcomeMessage', (object) => {
+    const string = object.text;
+    const user = object.username;
+    const createdAt = moment(object.createdAt).format('HH:mm:ss');
+
+    const html = Mustache.render(htmlTemplate[0], {
+        string,
+        user,
+        createdAt,
+    });
+    messageContainer.insertAdjacentHTML('beforeend', html);
+
+    const time = player.getCurrentTime();
+    const id = videoIdParse(player.getVideoUrl());
+    setTimeout(() => {
+        socket.emit('videoSync', time, id);
+    }, 700);
+
+    autoscroll();
 });
 
 socket.on('message', (object) => {
@@ -136,23 +157,24 @@ socket.emit('join', { username, room }, (error) => {
 });
 // ####### EVENT LISTENERS ####### //
 
-// SYNC VIDEOS
-syncVideosButton.addEventListener('click', () => {
-    console.log(player.getVideoUrl());
+// SYNC VIDEOS BUTTON
 
-    // If video is the same as starting video
-    if (
-        videoIdParse(player.getVideoUrl()) ===
-        videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
-    )
-        return alert(
-            'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
-        );
+// syncVideosButton.addEventListener('click', () => {
+//     console.log(player.getVideoUrl());
 
-    const time = player.getCurrentTime();
-    const id = videoIdParse(player.getVideoUrl());
-    socket.emit('videoSync', time, id);
-});
+//     // If video is the same as starting video
+//     if (
+//         videoIdParse(player.getVideoUrl()) ===
+//         videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
+//     )
+//         return alert(
+//             'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
+//         );
+
+//     const time = player.getCurrentTime();
+//     const id = videoIdParse(player.getVideoUrl());
+//     socket.emit('videoSync', time, id);
+// });
 
 // Change video
 changeVideoButton.addEventListener('click', () => {
@@ -241,26 +263,26 @@ const videoIdParse = (link) => {
         return link.slice(link.indexOf('v=') + 2);
     }
 };
-socket.on('joinSynchronization', (ytVideoToSync) => {
-    span.onclick = function () {
+// socket.on('joinSynchronization', (ytVideoToSync) => {
+span.onclick = function () {
+    modal.style.display = 'none';
+    chatBox.style.visibility = 'visible';
+    // TUTAJ LOGIKA
+    // if (!ytVideoToSync) return;
+    // player.loadVideoById(ytVideoToSync);
+};
+
+window.onclick = function (event) {
+    if (event.target == modal) {
         modal.style.display = 'none';
         chatBox.style.visibility = 'visible';
-        // TUTAJ LOGIKA
-        if (!ytVideoToSync) return;
-        player.loadVideoById(ytVideoToSync);
-    };
+        // if (!ytVideoToSync) return;
+        // player.loadVideoById(ytVideoToSync);
+    }
+};
 
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = 'none';
-            chatBox.style.visibility = 'visible';
-            if (!ytVideoToSync) return;
-            player.loadVideoById(ytVideoToSync);
-        }
-    };
-
-    return console.log(ytVideoToSync);
-});
+// return console.log(ytVideoToSync);
+// });
 
 // TEMPLATES
 const sidebarTemplate = `<h2 class="room-title">{{room}}</h2>
@@ -284,7 +306,7 @@ const htmlTemplate = [
         <span class="message__name"> {{user}} </span>
         <span class="message__meta"> {{createdAt}} </span>
     </p>
-    <p><a href="{{string}}">{{string}}</a></p>
+    <p><a target=”_blank” href="{{string}}">{{string}}</a></p>
 </div>`,
     `<div class="message">
 <p class="welcome-mess">{{string}}</p>
