@@ -10,6 +10,7 @@ const {
     getUser,
     getUsersInRoom,
 } = require('./utils/users');
+const { addVideo, getVideo } = require('./utils/videos');
 
 const app = express();
 app.set('view engine', 'hbs');
@@ -39,6 +40,9 @@ io.on('connection', (socket) => {
             'message',
             generateMessage(`Welcome to the server, ${username}!`)
         );
+
+        socket.emit('joinSynchronization', getVideo(user.room));
+
         socket.broadcast
             .to(user.room)
             .emit('message', generateMessage(`${user.username} has joined`));
@@ -51,7 +55,6 @@ io.on('connection', (socket) => {
 
     socket.on('videoSync', (time, id) => {
         const user = getUser(socket.id);
-        // console.log(time);
         io.to(user.room).emit('videoSync', time, id);
     });
 
@@ -66,7 +69,6 @@ io.on('connection', (socket) => {
         const filter = new Filter();
 
         if (filter.isProfane(message)) message = filter.clean(message);
-        //callback('Profanity is not allowed');
         try {
             io.to(user.room).emit(
                 'message',
@@ -80,9 +82,11 @@ io.on('connection', (socket) => {
     });
 
     // Changing state of yt player after recv -> send data.e
-    socket.on('onPlayerState', (data, time) => {
+    socket.on('onPlayerState', (data, time, videoID) => {
         const user = getUser(socket.id);
         if (user) {
+            addVideo({ room: user.room, videoID });
+
             io.to(user.room).emit('onPlayerState', data, time);
         }
     });

@@ -36,7 +36,12 @@ function onYouTubePlayerAPIReady() {
         // 3 bufforing, 1 playing, 2 paused, -1 stopped entirely
         if (e.data !== 3) {
             const time = e.target.getCurrentTime();
-            socket.emit('onPlayerState', e.data, time);
+            socket.emit(
+                'onPlayerState',
+                e.data,
+                time,
+                videoIdParse(e.target.getVideoUrl())
+            );
         }
     });
 }
@@ -50,9 +55,7 @@ const { username, room } = Qs.parse(location.search, {
 // ###### SOCKETS LOGIC ###### //
 
 socket.on('videoSync', (time, id) => {
-    // console.log(time, id);
     player.loadVideoById(id, time);
-    // player.seekTo(time);
 });
 
 socket.on('changeVideo', (videoId) => {
@@ -65,7 +68,16 @@ socket.on('message', (object) => {
     const user = object.username;
     const createdAt = moment(object.createdAt).format('HH:mm:ss');
 
-    if (string.includes('https') || string.includes('http')) {
+    if (
+        (string.includes('https://') &&
+            (string.includes('.com') ||
+                string.includes('.pl') ||
+                string.includes('.org'))) ||
+        (string.includes('http://') &&
+            (string.includes('.com') ||
+                string.includes('.pl') ||
+                string.includes('.org')))
+    ) {
         const html = Mustache.render(htmlTemplate[1], {
             user,
             string,
@@ -158,7 +170,10 @@ form.addEventListener('submit', (e) => {
     input.focus();
 
     // Disable form
-    if (input.value === '') return;
+    if (input.value === '' || input.value === ' ')
+        return alert('Your message is blank');
+    else if (input.value[0] === ' ')
+        return alert('Delete the space at the beggining');
     button.setAttribute('disabled', 'disabled');
 
     socket.emit('message', input.value, (error) => {
@@ -226,17 +241,26 @@ const videoIdParse = (link) => {
         return link.slice(link.indexOf('v=') + 2);
     }
 };
-
-span.onclick = function () {
-    modal.style.display = 'none';
-    chatBox.style.visibility = 'visible';
-};
-window.onclick = function (event) {
-    if (event.target == modal) {
+socket.on('joinSynchronization', (ytVideoToSync) => {
+    span.onclick = function () {
         modal.style.display = 'none';
         chatBox.style.visibility = 'visible';
-    }
-};
+        // TUTAJ LOGIKA
+        if (!ytVideoToSync) return;
+        player.loadVideoById(ytVideoToSync);
+    };
+
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+            chatBox.style.visibility = 'visible';
+            if (!ytVideoToSync) return;
+            player.loadVideoById(ytVideoToSync);
+        }
+    };
+
+    return console.log(ytVideoToSync);
+});
 
 // TEMPLATES
 const sidebarTemplate = `<h2 class="room-title">{{room}}</h2>
@@ -260,7 +284,7 @@ const htmlTemplate = [
         <span class="message__name"> {{user}} </span>
         <span class="message__meta"> {{createdAt}} </span>
     </p>
-    <p><a href="{{string}}">Link</a></p>
+    <p><a href="{{string}}">{{string}}</a></p>
 </div>`,
     `<div class="message">
 <p class="welcome-mess">{{string}}</p>
