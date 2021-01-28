@@ -25,11 +25,10 @@
   <div class="modal-content">
     <span class="close">&times;</span>
     <p class="modal-text"><h4>Manual:</h4>
-      To send messages write text in the input and then click "Send" button<br>
-      To send location just click "Send Location" button<br>
-      To change video paste your youtube link and click "Change video"<br>
-      To synchronize your video between users, click "Synchronize videos" button<br>
-      If you see the video "YouTube Developers live:..." you can paste your own link to the youtube video or ask for a synchronization<br>
+      <li>To send messages write text in the input fi and then click "Send" button</li>
+      <li>To send location just click "Send Location" button</li>
+      <li>To change video paste your youtube link and click "Change video"</li>
+      <li>To synchronize your video between users, click "Synchronize videos" button</li>
       
     </p>
   </div>
@@ -44,15 +43,18 @@
         <div class="compose">
           <form action="POST" id="sendMessForm">
             <input placeholder="Write your message" autocomplete="off">
-            <button type="submit" id="formButton">Send</button>    
+            <button class="sendMessage" type="submit" id="formButton">Send</button>    
           </form>
-          <button id="sendLocation">Send location</button>
-          <hr style="padding: 6px; border: 0 none; height: 5px; color: rgb(233, 233, 233)">
-          <button id="changeVideo">Change video</button>
-          <!-- <hr style="padding: 6px; border: 0 none; height: 5px; color: rgb(233, 233, 233)">
-          <button id="syncVideos">Synchronize videos</button> -->
         </div>
+        <div class="buttonsDiv">
+        
+        <!-- <hr style="padding: 6px; border: 0 none; height: 5px; color: rgb(233, 233, 233)"> -->
+        <button id="changeVideo" class="space-between">Change video</button>
+        <!-- <hr style="padding: 6px; border: 0 none; height: 5px; color: rgb(233, 233, 233)"> -->
+        <button id="syncVideos" class="space-between">Synchronize videos</button>
+        <button id="sendLocation" class="space-between">Send location</button>
 
+        </div>
     </div>
   </div>
 

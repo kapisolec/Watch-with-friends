@@ -159,22 +159,22 @@ socket.emit('join', { username, room }, (error) => {
 
 // SYNC VIDEOS BUTTON
 
-// syncVideosButton.addEventListener('click', () => {
-//     console.log(player.getVideoUrl());
+syncVideosButton.addEventListener('click', () => {
+    console.log(player.getVideoUrl());
 
-//     // If video is the same as starting video
-//     if (
-//         videoIdParse(player.getVideoUrl()) ===
-//         videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
-//     )
-//         return alert(
-//             'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
-//         );
+    // If video is the same as starting video
+    if (
+        videoIdParse(player.getVideoUrl()) ===
+        videoIdParse(`https://youtube.com/watch?v=M7lc1UVf-VE`)
+    )
+        return alert(
+            'This is a default video, you cannot synchronize it. \nWrite a request for synchronization in the chat or paste your own link.'
+        );
 
-//     const time = player.getCurrentTime();
-//     const id = videoIdParse(player.getVideoUrl());
-//     socket.emit('videoSync', time, id);
-// });
+    const time = player.getCurrentTime();
+    const id = videoIdParse(player.getVideoUrl());
+    socket.emit('videoSync', time, id);
+});
 
 // Change video
 changeVideoButton.addEventListener('click', () => {
@@ -253,7 +253,9 @@ const autoscroll = () => {
 
 // Parsing yt video
 const videoIdParse = (link) => {
-    if (link.includes('&ab_channel')) {
+    console.log(link);
+    if (link === 'https://www.youtube.com/watch') return;
+    else if (link.includes('&ab_channel')) {
         const substr = link.substring(
             link.indexOf('v=') + 2,
             link.indexOf('&')
