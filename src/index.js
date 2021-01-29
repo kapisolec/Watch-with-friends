@@ -91,7 +91,7 @@ io.on('connection', (socket) => {
         if (user) {
             addVideo({ room: user.room, videoID });
 
-            io.to(user.room).emit('onPlayerState', data, time);
+            socket.to(user.room).emit('onPlayerState', data, time);
         }
     });
 
