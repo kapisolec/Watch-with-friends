@@ -136,6 +136,7 @@ socket.on('videoData', (videoData) => {
 
 // ON PLAYER STATE DATA RECV
 socket.on('onPlayerState', (data, time) => {
+    console.log(data);
     if (data === 1 || data === -1) {
         // player.seekTo(time, true);
         player.playVideo();
