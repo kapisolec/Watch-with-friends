@@ -193,10 +193,19 @@ form.addEventListener('submit', (e) => {
     input.focus();
 
     // Disable form
-    if (input.value === '' || input.value === ' ')
-        return alert('Your message is blank');
-    else if (input.value[0] === ' ')
-        return alert('Delete the space at the beggining');
+    for (let index = 0; index < input.value.length; index++) {
+        if (input.value[index] == ' ') {
+            console.log('true');
+
+            input.value = input.value.slice(index + 1);
+            if (!input.value.slice(index + 1)) return;
+        } else {
+            break;
+        }
+    }
+    console.log('input value: ' + input.value);
+    if (input.value === '') return console.log('input pusty');
+
     button.setAttribute('disabled', 'disabled');
 
     socket.emit('message', input.value, (error) => {
